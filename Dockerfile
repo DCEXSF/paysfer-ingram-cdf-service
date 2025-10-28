@@ -14,7 +14,7 @@ RUN npm install --production
 COPY . .
 
 # Expose port (from env or default 8080)
-ENV PORT=${PORT:-8080}
+ENV PORT=8080
 EXPOSE 8080
 
 # Start the app

@@ -3,7 +3,7 @@ name: Deploy to Google Cloud Run
 on:
   push:
     branches:
-      - man
+      - main
 
 jobs:
   build-and-deploy:
@@ -12,12 +12,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
         with:
-          project_id: my-gcp-project-id
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: paysfr
 
       - name: Configure Docker for Artifact Registry
         run: |
@@ -25,20 +28,26 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t us-central1-docker.pkg.dev/my-gcp-project-id/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest .
+          docker build -t us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest .
 
       - name: Push Docker image to Artifact Registry
         run: |
-          docker push us-central1-docker.pkg.dev/my-gcp-project-id/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest
+          docker push us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest
 
       - name: Deploy to Cloud Run
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_ARTIFACT_REGION: ${{ secrets.GCP_ARTIFACT_REGION }}
           GCP_RUN_REGION: ${{ secrets.GCP_RUN_REGION }}
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          PORT: ${{ secrets.PORT }}
         run: |
           gcloud run deploy paysfer-ingram-cdf-service \
             --image=${GCP_ARTIFACT_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest \
             --region=${GCP_RUN_REGION} \
             --platform=managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-env-vars=FTP_HOST=${FTP_HOST},FTP_PORT=${FTP_PORT},FTP_USER=${FTP_USER},FTP_PASSWORD=${FTP_PASSWORD},PORT=${PORT}

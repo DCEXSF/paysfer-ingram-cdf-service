@@ -1,0 +1,44 @@
+name: Deploy to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - man
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: my-gcp-project-id
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build Docker image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/my-gcp-project-id/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest .
+
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker push us-central1-docker.pkg.dev/my-gcp-project-id/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest
+
+      - name: Deploy to Cloud Run
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_ARTIFACT_REGION: ${{ secrets.GCP_ARTIFACT_REGION }}
+          GCP_RUN_REGION: ${{ secrets.GCP_RUN_REGION }}
+        run: |
+          gcloud run deploy paysfer-ingram-cdf-service \
+            --image=${GCP_ARTIFACT_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest \
+            --region=${GCP_RUN_REGION} \
+            --platform=managed \
+            --allow-unauthenticated

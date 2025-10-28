@@ -35,7 +35,7 @@ app.get("/processOrder/:orderId", async (req, res) => {
     res.send(`Error processing order: ${error.message}`);
     return;
   }
-  res.send(orderProps);
+  res.send(response);
 });
 
 app.get("/health", (req, res) => {

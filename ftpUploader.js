@@ -1,8 +1,8 @@
-const Client = require("ssh2-sftp-client");
-const fs = require("fs");
-const path = require("path");
+import Client from "ssh2-sftp-client";
+import fs from "fs";
+import path from "path";
 
-async function uploadToFTP(localFilePath) {
+export async function uploadToFTP(localFilePath) {
   const sftp = new Client();
   const remoteDir = "/incoming";
   const fileName = path.basename(localFilePath);
@@ -25,5 +25,3 @@ async function uploadToFTP(localFilePath) {
     sftp.end();
   }
 }
-
-module.exports = { uploadToFTP };

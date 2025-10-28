@@ -1,8 +1,10 @@
-const fs = require("fs");
-const moment = require("moment");
-const mustache = require("mustache");
-const path = require("path");
-
+import fs from "fs";
+import moment from "moment";
+import mustache from "mustache";
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 /**
  * Pads string left with zeros.
  */
@@ -41,6 +43,9 @@ const generate10DigitNumber = () => {
  * @param {{ user: any, address: any, order: any }} input
  */
 const generateFBOFile = ({ user, address, order }) => {
+  console.log("Generating FBO file for Order ID:", order);
+  console.log("User:", user);
+  console.log("Address:", address);
   const creationDate = moment().format("YYMMDD");
   const NinetyDaysFromNow = moment().add(90, "days").format("YYMMDD");
   const fileName = padToFixedLength(`${order.ID}.fbo`, 22);
@@ -103,6 +108,7 @@ const generateFBOFile = ({ user, address, order }) => {
             51
           ),
           userAddressLine: padToFixedLength(address.AddressLine1, 51),
+          userAddressLine2: padToFixedLength(address.AddressLine2, 51),
           userCity: padToFixedLength(address.City, 25),
           userState: padToFixedLength(address.StateOrProvince, 3),
           userZipCode: padToFixedLength(address.PostalCode, 11),
@@ -120,7 +126,7 @@ const generateFBOFile = ({ user, address, order }) => {
       "0Records": padFixedZero(records.length * 1, 5),
       "1Records": padFixedZero(records.length * 2, 5),
       "2Records": padFixedZero(records.length * 5, 5),
-      "3Records": padFixedZero(records.length * 4, 5),
+      "3Records": padFixedZero(records.length * 5, 5),
       "4Records": padFixedZero(records.length * 2, 5),
       "5Records": padFixedZero(records.length, 5),
       "6Records": padFixedZero(0, 5),
@@ -152,6 +158,7 @@ const generateFBOFile = ({ user, address, order }) => {
       51
     ),
     userAddressLine: padToFixedLength(address.AddressLine1, 51),
+    userAddressLine2: padToFixedLength(address.AddressLine2, 51),
     userCity: padToFixedLength(address.City, 25),
     userState: padToFixedLength(address.StateOrProvince, 3),
     userZipCode: padToFixedLength(address.PostalCode, 11),
@@ -172,4 +179,4 @@ const generateFBOFile = ({ user, address, order }) => {
   return outputPath;
 };
 
-module.exports = generateFBOFile;
+export { generateFBOFile };

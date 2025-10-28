@@ -18,4 +18,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Start the app
-CMD ["npx", "functions-framework", "--target=processOrder"]
+CMD ["npm", "start"]

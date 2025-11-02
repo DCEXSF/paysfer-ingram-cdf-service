@@ -51,3 +51,6 @@ jobs:
             --platform=managed \
             --allow-unauthenticated \
             --set-env-vars=FTP_HOST=${FTP_HOST},FTP_PORT=${FTP_PORT},FTP_USER=${FTP_USER},FTP_PASSWORD=${FTP_PASSWORD}
+      - name: Set traffic to latest revision
+        run: |
+          gcloud run services update-traffic paysfer-ingram-cdf-service --to-latest --region=us-central1 --platform=managed --project=paysfr

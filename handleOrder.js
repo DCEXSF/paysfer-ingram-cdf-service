@@ -3,8 +3,8 @@ import { uploadToGCS } from "./uploadToGcs.js";
 import { generateFBOFile } from "./formatToCdfl.js";
 
 async function handleOrder(orderProps, isProd) {
-//   console.log("Order Props:", orderProps);
-//   console.log("isProd:", isProd);
+  //   console.log("Order Props:", orderProps);
+  //   console.log("isProd:", isProd);
   if (!isProd) {
     return `Orders Are not Sent Because we are in beta testing!`;
   }

@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const __mustacheDir = path.join(__dirname, "mustache_templates");
 /**
  * Pads string left with zeros.
  */
@@ -58,37 +59,41 @@ const generateFBOFile = ({ user, address, order }) => {
   const SHIPPING =
     currentCountry === "USA" ? "### USA ECONOMY" : "### INTL  COURIER";
 
+  let totalItemsQuantity = 0;
+
   // Render header
-  const headerTemplatePath = path.join(__dirname, "header.mustache");
+  const headerTemplatePath = path.join(__mustacheDir, "header.mustache");
   const headerTemplate = fs.readFileSync(headerTemplatePath, "utf8");
+  const backOrderCancellationDate = NinetyDaysFromNow;
   const headerOutput = mustache.render(headerTemplate, {
     creationDate,
     fileName,
-    orderIdNoSpace,
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
     accountNumber,
+    backOrderCancellationDate,
   });
 
   // Render seller section
-  const sellerTemplatePath = path.join(__dirname, "seller.mustache");
+  const sellerTemplatePath = path.join(__mustacheDir, "seller.mustache");
   const sellerTemplate = fs.readFileSync(sellerTemplatePath, "utf8");
   const sellerOutput = mustache.render(sellerTemplate, {
-    orderIdNoSpace,
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
     accountNumber,
     shippingMethod: padToFixedLength(SHIPPING, 26),
   });
 
   // Render shipping section
-  const shippingTemplatePath = path.join(__dirname, "shipping.mustache");
+  const shippingTemplatePath = path.join(__mustacheDir, "shipping.mustache");
   const shippingTemplate = fs.readFileSync(shippingTemplatePath, "utf8");
   const shippingOutput = mustache.render(shippingTemplate, {
-    orderIdNoSpace,
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
     userName: padToFixedLength(`${user.firstName} ${user.lastName}`, 50),
     userNumber: padToFixedLength(
       address.DaytimePhone || user.phoneNumber || "0000000000",
       51
     ),
-    userAddressLine: padToFixedLength(address.AddressLine1, 51),
-    userAddressLine2: padToFixedLength(address.AddressLine2, 51),
+    userAddressLine: padToFixedLength(address.AddressLine1, 50),
+    userAddressLine2: padToFixedLength(address.AddressLine2, 50),
     userCity: padToFixedLength(address.City, 25),
     userState: padToFixedLength(address.StateOrProvince, 3),
     userZipCode: padToFixedLength(address.PostalCode, 11),
@@ -96,13 +101,14 @@ const generateFBOFile = ({ user, address, order }) => {
   });
 
   // Render items section (repeat for each item)
-  const itemsTemplatePath = path.join(__dirname, "items.mustache");
+  const itemsTemplatePath = path.join(__mustacheDir, "items.mustache");
   const itemsTemplate = fs.readFileSync(itemsTemplatePath, "utf8");
   const itemsOutput = items
     .map((item) => {
+      totalItemsQuantity += item.Quantity || 0;
       const randomNumber = generate10DigitNumber();
       return mustache.render(itemsTemplate, {
-        orderIdNoSpace,
+        orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
         poaLineNumber: padToFixedLength(randomNumber, 22),
         EAN: padToFixedLength(item.SellerSKU || item.EAN, 20),
         itemPrice: padToFixedLength(
@@ -118,17 +124,18 @@ const generateFBOFile = ({ user, address, order }) => {
     .join("\n");
 
   // Render footer section
-  const footerTemplatePath = path.join(__dirname, "footer.mustache");
+  const footerTemplatePath = path.join(__mustacheDir, "footer.mustache");
   const footerTemplate = fs.readFileSync(footerTemplatePath, "utf8");
-  const totalrecords_ten_fifty = 4 + items.length * 2; // header+seller+shipping+footer + 2*items
+  const totalrecords_ten_fifty = 12 + items.length * 2; // header+seller+shipping+footer + 2*items
+  console.log("Total total records 10 to 50 Quantity:", totalrecords_ten_fifty);
   const footerOutput = mustache.render(footerTemplate, {
-    orderIdNoSpace,
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
     "1050totalRecords": padFixedZero(totalrecords_ten_fifty, 5),
     "40Records50record": padFixedZero(items.length, 10),
-    "4041Records": padFixedZero(items.length, 13),
+    "4041Records": padFixedZero(totalItemsQuantity, 13),
     "40Records": padFixedZero(items.length, 13),
     "10Records": padFixedZero(1, 5),
-    "4041Records": padFixedZero(items.length, 10),
+    "4041Records": padFixedZero(totalItemsQuantity, 10),
     "0Records": padFixedZero(1, 5),
     "1Records": padFixedZero(1, 5),
     "2Records": padFixedZero(5, 5),

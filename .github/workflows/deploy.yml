@@ -50,5 +50,4 @@ jobs:
             --region=${GCP_RUN_REGION} \
             --platform=managed \
             --allow-unauthenticated \
-            --set-env-vars=FTP_HOST=${FTP_HOST},FTP_PORT=${FTP_PORT},FTP_USER=${FTP_USER},FTP_PASSWORD=${FTP_PASSWORD}\
-            --traffic=100
+            --set-env-vars=FTP_HOST=${FTP_HOST},FTP_PORT=${FTP_PORT},FTP_USER=${FTP_USER},FTP_PASSWORD=${FTP_PASSWORD}

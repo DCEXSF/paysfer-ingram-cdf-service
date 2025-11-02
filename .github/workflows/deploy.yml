@@ -28,11 +28,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest .
+          docker build -t us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:${{ github.sha }} .
 
       - name: Push Docker image to Artifact Registry
         run: |
-          docker push us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest
+          docker push us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         env:
@@ -46,7 +46,7 @@ jobs:
           PORT: ${{ secrets.PORT }}
         run: |
           gcloud run deploy paysfer-ingram-cdf-service \
-            --image=${GCP_ARTIFACT_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:latest \
+            --image=${GCP_ARTIFACT_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:${{ github.sha }} \
             --region=${GCP_RUN_REGION} \
             --platform=managed \
             --allow-unauthenticated \

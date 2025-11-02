@@ -11,6 +11,7 @@ async function handleOrder(orderProps, isProd) {
   const fboFilePath = await generateFBOFile(orderProps);
   await uploadToGCS(fboFilePath);
   await uploadToFTP(fboFilePath);
+  console.log("✅ Order processed successfully latest.");
   return `Order Sent Successfully!`;
 }
 

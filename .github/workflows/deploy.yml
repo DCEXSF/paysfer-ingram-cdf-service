@@ -28,7 +28,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:${{ github.sha }} .
+          docker build --no-cache -t us-central1-docker.pkg.dev/paysfr/paysfer-ingram-cdf-service-repo/paysfer-ingram-cdf-service:${{ github.sha }} .
 
       - name: Push Docker image to Artifact Registry
         run: |

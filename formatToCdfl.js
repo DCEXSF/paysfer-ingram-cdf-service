@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const __mustacheDir = path.join(__dirname, "mustache_templates");
 /**
  * Pads string left with zeros.
  */
@@ -53,129 +54,116 @@ const generateFBOFile = ({ user, address, order }) => {
   const fileNameWithSubSpace = padToFixedLength(order.ID, 22);
   const accountNumber = "20AS036";
   const items = order.Items || [];
-  const isMultiple = items.length > 1;
   const country = address.Country;
   const currentCountry = country === "CAN" ? "CAN" : "USA";
   const SHIPPING =
     currentCountry === "USA" ? "### USA ECONOMY" : "### INTL  COURIER";
-  const records = items.map((item, index) => {
-    const randomNumber = generate10DigitNumber();
-    const fileNameWithSubSpaceIndex = padToFixedLength(
-      (item.ID || "").replace(/[\s-]/g, ""),
-      22
-    );
-    return {
-      poaLineNumber: padToFixedLength(randomNumber, 22),
-      EAN: padToFixedLength(item.SellerSKU || item.EAN, 20),
-      itemPrice: padToFixedLength(
-        padLeftZero(
-          String(parseFloat(item?.totalItemPrice || 0).toFixed(2)),
-          8
-        ),
-        17
-      ),
-      index,
-      fileNameWithSubSpace: fileNameWithSubSpaceIndex,
-      accountNumber,
-      itemQuantity: padFixedZero(String(item?.Quantity) || "1", 7),
-    };
-  });
-  if (isMultiple) {
-    const headerTemplatePath = path.join(__dirname, "header.mustache");
-    const headerTemplate = fs.readFileSync(headerTemplatePath, "utf8");
-    const headerOutput = mustache.render(headerTemplate, {
-      creationDate,
-      fileName,
-      isMultiple,
-    });
-    const bodyTemplatePath = path.join(__dirname, "repeat.mustache");
-    const bodyTemplate = fs.readFileSync(bodyTemplatePath, "utf8");
-    let bodyOutput = records
-      .map((record) =>
-        mustache.render(bodyTemplate, {
-          ...record,
-          creationDate,
-          fileName,
-          fileNameWithSubSpace:
-            record.fileNameWithSubSpace || fileNameWithSubSpace,
-          accountNumber,
-          backOrderCancellationDate: NinetyDaysFromNow,
-          isBackOrder: "Y",
-          shippingMethod: padToFixedLength(SHIPPING, 26),
-          userName: padToFixedLength(`${user.firstName} ${user.lastName}`, 50),
-          userNumber: padToFixedLength(
-            address.DaytimePhone || user.phoneNumber || "0000000000",
-            51
-          ),
-          userAddressLine: padToFixedLength(address.AddressLine1, 51),
-          userAddressLine2: padToFixedLength(address.AddressLine2, 51),
-          userCity: padToFixedLength(address.City, 25),
-          userState: padToFixedLength(address.StateOrProvince, 3),
-          userZipCode: padToFixedLength(address.PostalCode, 11),
-          userCountry: padToFixedLength(currentCountry, 3),
-        })
-      )
-      .join("\n");
-    bodyOutput = bodyOutput.replace(/&#x2F;/g, "/");
-    const footerTemplatePath = path.join(__dirname, "footer.mustache");
-    const footerTemplate = fs.readFileSync(footerTemplatePath, "utf8");
-    const footerOutput = mustache.render(footerTemplate, {
-      "40Records": padFixedZero(records.length, 13),
-      "10Records": padFixedZero(records.length, 5),
-      "4041Records": padFixedZero(records.length, 10),
-      "0Records": padFixedZero(records.length * 1, 5),
-      "1Records": padFixedZero(records.length * 2, 5),
-      "2Records": padFixedZero(records.length * 5, 5),
-      "3Records": padFixedZero(records.length * 5, 5),
-      "4Records": padFixedZero(records.length * 2, 5),
-      "5Records": padFixedZero(records.length, 5),
-      "6Records": padFixedZero(0, 5),
-      "7Records": padFixedZero(0, 5),
-      "89Records": padFixedZero(1, 5),
-    });
-    const outputPath = path.join(__dirname, `${orderIdNoSpace}.fbo`);
-    fs.writeFileSync(
-      outputPath,
-      headerOutput + bodyOutput + "\n" + footerOutput,
-      "utf8"
-    );
 
-    return outputPath;
-  }
+  let totalItemsQuantity = 0;
 
-  const mustacheData = {
-    isMultiple,
+  // Render header
+  const headerTemplatePath = path.join(__mustacheDir, "header.mustache");
+  const headerTemplate = fs.readFileSync(headerTemplatePath, "utf8");
+  const backOrderCancellationDate = NinetyDaysFromNow;
+  const headerOutput = mustache.render(headerTemplate, {
     creationDate,
     fileName,
-    fileNameWithSubSpace,
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
     accountNumber,
-    backOrderCancellationDate: NinetyDaysFromNow,
-    isBackOrder: "Y",
+    backOrderCancellationDate,
+  });
+
+  // Render seller section
+  const sellerTemplatePath = path.join(__mustacheDir, "seller.mustache");
+  const sellerTemplate = fs.readFileSync(sellerTemplatePath, "utf8");
+  const sellerOutput = mustache.render(sellerTemplate, {
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
+    accountNumber,
     shippingMethod: padToFixedLength(SHIPPING, 26),
+  });
+
+  // Render shipping section
+  const shippingTemplatePath = path.join(__mustacheDir, "shipping.mustache");
+  const shippingTemplate = fs.readFileSync(shippingTemplatePath, "utf8");
+  const shippingOutput = mustache.render(shippingTemplate, {
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
     userName: padToFixedLength(`${user.firstName} ${user.lastName}`, 50),
     userNumber: padToFixedLength(
       address.DaytimePhone || user.phoneNumber || "0000000000",
       51
     ),
-    userAddressLine: padToFixedLength(address.AddressLine1, 51),
-    userAddressLine2: padToFixedLength(address.AddressLine2, 51),
+    userAddressLine: padToFixedLength(address.AddressLine1, 50),
+    userAddressLine2: padToFixedLength(address.AddressLine2, 50),
     userCity: padToFixedLength(address.City, 25),
     userState: padToFixedLength(address.StateOrProvince, 3),
     userZipCode: padToFixedLength(address.PostalCode, 11),
     userCountry: padToFixedLength(currentCountry, 3),
-    ...(!isMultiple ? records[0] : {}),
-    is90RecordRequired: false,
-  };
+  });
 
-  const templatePath = path.join(__dirname, "fbo.mustache");
-  const template = fs.readFileSync(templatePath, "utf8");
+  // Render items section (repeat for each item)
+  const itemsTemplatePath = path.join(__mustacheDir, "items.mustache");
+  const itemsTemplate = fs.readFileSync(itemsTemplatePath, "utf8");
+  const itemsOutput = items
+    .map((item) => {
+      totalItemsQuantity += item.Quantity || 0;
+      const randomNumber = generate10DigitNumber();
+      return mustache.render(itemsTemplate, {
+        orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
+        poaLineNumber: padToFixedLength(randomNumber, 22),
+        EAN: padToFixedLength(item.SellerSKU || item.EAN, 20),
+        itemPrice: padToFixedLength(
+          padLeftZero(
+            String(parseFloat(item?.totalItemPrice || 0).toFixed(2)),
+            8
+          ),
+          17
+        ),
+        itemQuantity: padFixedZero(String(item?.Quantity) || "1", 7),
+      });
+    })
+    .join("\n");
 
-  let output = mustache.render(template, mustacheData);
-  output = output.replace(/&#x2F;/g, "/");
+  // Render footer section
+  const footerTemplatePath = path.join(__mustacheDir, "footer.mustache");
+  const footerTemplate = fs.readFileSync(footerTemplatePath, "utf8");
+  const totalrecords_ten_fifty = 12 + items.length * 2; // header+seller+shipping+footer + 2*items
+  console.log("Total total records 10 to 50 Quantity:", totalrecords_ten_fifty);
+  const footerOutput = mustache.render(footerTemplate, {
+    orderIdNoSpace: padToFixedLength(orderIdNoSpace, 22),
+    "1050totalRecords": padFixedZero(totalrecords_ten_fifty, 5),
+    "40Records50record": padFixedZero(items.length, 10),
+    "4041Records": padFixedZero(totalItemsQuantity, 13),
+    "40Records": padFixedZero(items.length, 13),
+    "10Records": padFixedZero(1, 5),
+    "4041Records": padFixedZero(totalItemsQuantity, 10),
+    "0Records": padFixedZero(1, 5),
+    "1Records": padFixedZero(1, 5),
+    "2Records": padFixedZero(5, 5),
+    "3Records": padFixedZero(5, 5),
+    "4Records": padFixedZero(items.length * 2, 5),
+    "5Records": padFixedZero(1, 5),
+    "6Records": padFixedZero(0, 5),
+    "7Records": padFixedZero(0, 5),
+    "89Records": padFixedZero(1, 5),
+  });
+
+  // Combine all sections and pad each line to 80 chars
+  const allLines = (
+    headerOutput +
+    "\n" +
+    sellerOutput +
+    "\n" +
+    shippingOutput +
+    "\n" +
+    itemsOutput +
+    "\n" +
+    footerOutput
+  )
+    .split(/\r?\n/)
+    .map((line) => padToFixedLength(line, 80))
+    .join("\n");
   const outputPath = path.join(__dirname, `${orderIdNoSpace}.fbo`);
-
-  fs.writeFileSync(outputPath, output, "utf8");
-
+  fs.writeFileSync(outputPath, allLines, "utf8");
   return outputPath;
 };
 

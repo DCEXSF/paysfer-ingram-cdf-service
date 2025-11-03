@@ -42,6 +42,32 @@ app.get("/health", (req, res) => {
   res.send("server is healthy");
 });
 
+// Endpoint to verify mustache_templates and files
+app.get("/verify-templates", (req, res) => {
+  const templatesDir = path.join(__dirname, "mustache_templates");
+  const requiredFiles = [
+    "footer.mustache",
+    "header.mustache",
+    "items.mustache",
+    "seller.mustache",
+    "shipping.mustache",
+  ];
+  let result = {
+    folderExists: false,
+    files: {},
+  };
+  try {
+    result.folderExists = fs.existsSync(templatesDir);
+    requiredFiles.forEach((file) => {
+      const filePath = path.join(templatesDir, file);
+      result.files[file] = fs.existsSync(filePath);
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use((req, res) => {
   res.status(404).send("Endpoint not found");
 });

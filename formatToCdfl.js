@@ -43,12 +43,31 @@ const generate10DigitNumber = () => {
  * Generates FBO file content using Mustache template.
  * @param {{ user: any, address: any, order: any }} input
  */
+
+function formatOrderId(orderId) {
+  // If already contains dashes, return as is
+  if (orderId.includes("-")) return orderId;
+  // If length is 13 and no dashes, format as XXXX-XXXXXX-XXXX
+  if (/^\d{14}$/.test(orderId)) {
+    console.log("Formatted Order ID:"); // "7810-044585-0010"); // "7810-044585-0010"
+    return `${orderId.slice(0, 4)}-${orderId.slice(4, 10)}-${orderId.slice(
+      10
+    )}`;
+  }
+  // Otherwise, return original
+  return orderId;
+}
+
 const generateFBOFile = ({ user, address, order }) => {
   const creationDate = moment().format("YYMMDD");
   const NinetyDaysFromNow = moment().add(90, "days").format("YYMMDD");
-  const fileName = padToFixedLength(`${order.ID}.fbo`, 22);
-  const orderIdNoSpace = (order.ID || "").trim();
-  const fileNameWithSubSpace = padToFixedLength(order.ID, 22);
+  let orderIdNoSpace = (order.ID || "").trim();
+  orderIdNoSpace = formatOrderId(orderIdNoSpace);
+  const fileName = padToFixedLength(`${orderIdNoSpace}.fbo`, 22);
+  console.log("Order ID No Space:", orderIdNoSpace);
+  console.log("File Name:", fileName);
+  // return orderIdNoSpace;
+  // const fileNameWithSubSpace = padToFixedLength(order.ID, 22);
   const accountNumber = "20AS036";
   const items = order.Items || [];
   const country = address.Country;

@@ -44,9 +44,6 @@ const generate10DigitNumber = () => {
  * @param {{ user: any, address: any, order: any }} input
  */
 const generateFBOFile = ({ user, address, order }) => {
-  console.log("Generating FBO file for Order ID:", order);
-  console.log("User:", user);
-  console.log("Address:", address);
   const creationDate = moment().format("YYMMDD");
   const NinetyDaysFromNow = moment().add(90, "days").format("YYMMDD");
   const fileName = padToFixedLength(`${order.ID}.fbo`, 22);
@@ -146,7 +143,7 @@ const generateFBOFile = ({ user, address, order }) => {
     "7Records": padFixedZero(0, 5),
     "89Records": padFixedZero(1, 5),
   });
-
+  console.log("✅ Order Id: ", orderIdNoSpace);
   // Combine all sections and pad each line to 80 chars
   const allLines = (
     headerOutput +

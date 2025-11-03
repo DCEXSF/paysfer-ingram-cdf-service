@@ -2,6 +2,8 @@ import express from "express";
 import bodyParser from "body-parser";
 import { handleOrder } from "./handleOrder.js";
 import { getOrderProps } from "./generateOrderProps.js";
+import fs from "fs";
+import path from "path";
 const app = express();
 app.use(bodyParser.json());
 

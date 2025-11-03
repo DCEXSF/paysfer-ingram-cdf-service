@@ -39,7 +39,7 @@ app.get("/processOrder/:orderId", async (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.send("OK");
+  res.send("server is healthy");
 });
 
 app.use((req, res) => {

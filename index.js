@@ -4,6 +4,10 @@ import { handleOrder } from "./handleOrder.js";
 import { getOrderProps } from "./generateOrderProps.js";
 import fs from "fs";
 import path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+
 const app = express();
 app.use(bodyParser.json());
 
@@ -46,6 +50,7 @@ app.get("/health", (req, res) => {
 
 // Endpoint to verify mustache_templates and files
 app.get("/verify-templates", (req, res) => {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
   const templatesDir = path.join(__dirname, "mustache_templates");
   const requiredFiles = [
     "footer.mustache",

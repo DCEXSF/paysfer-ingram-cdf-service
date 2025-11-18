@@ -73,7 +73,7 @@ const generateFBOFile = ({ user, address, order }) => {
   const country = address.Country;
   const currentCountry = country === "CAN" ? "CAN" : "USA";
   const SHIPPING =
-    currentCountry === "USA" ? "### USA ECONOMY" : "### INTL  COURIER";
+    currentCountry === "USA" ? "### USA ECONOMY" : "### INTL COURIER";
 
   let totalItemsQuantity = 0;
 
@@ -184,3 +184,4 @@ const generateFBOFile = ({ user, address, order }) => {
 };
 
 export { generateFBOFile };
+

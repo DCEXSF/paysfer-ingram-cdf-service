@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const __mustacheDir = path.join(__dirname, "mustache_templates");
+import {isPaysferWarehouseStockAvailable,removePaysferWarehouseItemsFromOrder} from './itemAvaillabilityCheckService.js';
 /**
  * Pads string left with zeros.
  */
@@ -58,7 +59,17 @@ function formatOrderId(orderId) {
   return orderId;
 }
 
-const generateFBOFile = ({ user, address, order }) => {
+const generateFBOFile = async ({ user, address, order }) => {
+  let filteredOrder = await removePaysferWarehouseItemsFromOrder(order);
+  order = filteredOrder.order;
+  console.log("needToOrderOnCDF:", filteredOrder.needToOrderOnCDF);
+  console.log(filteredOrder.order);
+  if (!filteredOrder.needToOrderOnCDF) {
+    throw new Error("NONEEDTOORDERONCDF");
+    console.log("No items need to be ordered on CDF after removing Paysfer Warehouse items.");
+    return {needToOrderOnCDF:filteredOrder.needToOrderOnCDF};
+  }
+console.log("Order after removing Paysfer Warehouse items:", order);
   const creationDate = moment().format("YYMMDD");
   const NinetyDaysFromNow = moment().add(90, "days").format("YYMMDD");
   let orderIdNoSpace = (order.ID || "").trim();

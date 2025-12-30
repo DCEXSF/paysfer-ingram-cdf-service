@@ -82,7 +82,8 @@ console.log("Order after removing Paysfer Warehouse items:", order);
   const accountNumber = "20AS036";
   const items = order.Items || [];
   const country = address.Country;
-  const currentCountry = country === "CAN" ? "CAN" : "USA";
+  // const currentCountry = country === "CAN" ? "CAN" : "USA";
+  const currentCountry = country;
   const SHIPPING =
     currentCountry === "USA" ? "### USA ECONOMY" : "### INTL COURIER";
 

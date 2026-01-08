@@ -82,6 +82,20 @@ console.log("Order after removing Paysfer Warehouse items:", order);
   const accountNumber = "20AS036";
   const items = order.Items || [];
   const country = address.Country;
+  // Map state/province for UK countries if needed
+  let userState = address.StateOrProvince;
+  if (typeof userState === "string") {
+    const stateMap = {
+      england: "ENG",
+      scotland: "SCT",
+      wales: "WLS",
+      "northern ireland": "NIR"
+    };
+    const normalized = userState.trim().toLowerCase();
+    if (stateMap[normalized]) {
+      userState = stateMap[normalized];
+    }
+  }
   // const currentCountry = country === "CAN" ? "CAN" : "USA";
   const currentCountry = country;
   const SHIPPING =
@@ -123,7 +137,7 @@ console.log("Order after removing Paysfer Warehouse items:", order);
     userAddressLine: padToFixedLength(address.AddressLine1, 50),
     userAddressLine2: padToFixedLength(address.AddressLine2, 50),
     userCity: padToFixedLength(address.City, 25),
-    userState: padToFixedLength(address.StateOrProvince, 3),
+    userState: padToFixedLength(userState, 3),
     userZipCode: padToFixedLength(address.PostalCode, 11),
     userCountry: padToFixedLength(currentCountry, 3),
   });
